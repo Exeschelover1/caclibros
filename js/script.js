@@ -1,27 +1,18 @@
-
-function toggleResponsive() {
-    var header = document.querySelector('.header');
-    header.classList.toggle('responsive');
-}
-
-
-/* DOM PRECIOS TITULOS */
 function agregarAlCarrito(button) {
     const titulo = button.parentNode.querySelector('.titulo-libro').textContent;
     const precio = parseFloat(button.parentNode.querySelector('.precio').textContent.replace('$', '').replace(',', ''));
-    const imagen = button.parentNode.querySelector('img').src; // Captura la URL de la imagen del libro
+    const imagen = button.parentNode.querySelector('img').src;
 
     let libroExistenteIndex = carrito.findIndex(item => item.nombre === titulo);
 
     if (libroExistenteIndex !== -1) {
         carrito[libroExistenteIndex].cantidad++;
     } else {
-        carrito.push({ nombre: titulo, precio: precio, cantidad: 1, imagen: imagen }); // Almacena la URL de la imagen del libro en el objeto del carrito
+        carrito.push({ nombre: titulo, precio: precio, cantidad: 1, imagen: imagen });
     }
     mostrarCarrito();
     actualizarCantidadCarrito();
 }
-
 
 /* DOM DINAMICO NAV */
 document.addEventListener('scroll', function () {
@@ -36,33 +27,27 @@ document.addEventListener('scroll', function () {
         navbar.style.backgroundColor = 'var(--color-principal)';
     }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 let carrito = [];
 
 const carritoNav = document.getElementById("carrito-nav");
-const carritoSidebar = document.getElementById("carrito-sidebar");
-const closeButton = document.querySelector(".close");
+const modalCarrito = document.getElementById("modal-carrito");
+const closeModal = document.querySelector(".close");
 
 carritoNav.addEventListener("click", () => {
-    carritoSidebar.style.width = "calc(25% - 40px)";
+    modalCarrito.style.display = "block";
+    mostrarCarrito();
 });
 
-closeButton.addEventListener("click", () => {
-    carritoSidebar.style.width = "0";
+closeModal.addEventListener("click", () => {
+    modalCarrito.style.display = "none";
 });
+
+window.addEventListener("click", (event) => {
+    if (event.target === modalCarrito) {
+        modalCarrito.style.display = "none";
+    }
+});
+
 
 // Quitamos la llamada a abrirCarrito() del evento DOMContentLoaded
 document.addEventListener("DOMContentLoaded", function () {
@@ -85,9 +70,6 @@ carritoNav.addEventListener("click", () => {
         localStorage.setItem("carritoAbierto", "true");
     }
 });
-
-
-
 // Función para abrir el carrito y guardar su estado en el almacenamiento local
 function abrirCarrito() {
     if (window.innerWidth > 768) {
@@ -99,8 +81,6 @@ function abrirCarrito() {
     }
 }
 
-
-
 // Función para cerrar el carrito y guardar su estado en el almacenamiento local
 function cerrarCarrito() {
     carritoSidebar.classList.remove("open");
@@ -108,21 +88,28 @@ function cerrarCarrito() {
 }
 
 function actualizarCantidadCarrito() {
-    let cantidadCarrito = 0;
-    carrito.forEach(item => cantidadCarrito += item.cantidad);
-    document.getElementById("cantidad-carrito").textContent = cantidadCarrito;
+    // Aquí puedes actualizar el ícono del carrito en la navegación con el número de elementos
+    const carritoNav = document.getElementById("carrito-nav");
+    const cantidadTotal = carrito.reduce((sum, item) => sum + item.cantidad, 0);
+    carritoNav.setAttribute("data-count", cantidadTotal);
+}
 
-    // Si la cantidad del carrito es mayor que 0, abre el carrito
-    if (cantidadCarrito > 0) {
-        abrirCarrito();
-    } else {
-        cerrarCarrito();
-    }
-}
+
 function eliminarDelCarrito(index) {
-    carrito.splice(index, 1);
-    mostrarCarrito();
+    const itemCarrito = document.querySelectorAll('.item-carrito')[index];
+    itemCarrito.classList.add('slide-out');
+
+    itemCarrito.addEventListener('animationend', () => {
+        // Eliminar el elemento del DOM después de la animación
+        itemCarrito.remove();
+
+        // Aquí puedes añadir la lógica para actualizar tu carrito en el estado de tu aplicación
+        // Por ejemplo, eliminando el elemento del array de items
+        carrito.splice(index, 1);
+        actualizarCarrito();
+    });
 }
+
 
 function modificarCantidad(index, cantidad) {
     carrito[index].cantidad = cantidad;
@@ -141,16 +128,13 @@ function disminuirCantidad(index) {
     }
 }
 
-
-
-
 function mostrarCarrito() {
     let carritoElemento = document.getElementById("carrito-resumen");
-    carritoElemento.innerHTML = ""; // Limpiar el contenido anterior del carrito
+    carritoElemento.innerHTML = "";
 
     if (carrito.length === 0) {
         carritoElemento.innerHTML = "<p class='texto-carrito'>No hay elementos en el carrito</p>";
-        document.getElementById("subtotal-total").innerHTML = ""; // Limpiar el subtotal si no hay elementos en el carrito
+        document.getElementById("subtotal-total").innerHTML = "$0.00";
         return;
     }
 
@@ -158,27 +142,25 @@ function mostrarCarrito() {
     carrito.forEach((item, index) => {
         subtotal += item.precio * item.cantidad;
         carritoElemento.innerHTML += `<div class='item-carrito'>
-        <img src='${item.imagen}' class='img-libro'> <!-- Muestra la imagen del libro -->
+        <img src='${item.imagen}' class='img-libro'>
         <div class='item-carrito-info'>
             <p class='titulo-libro carrito-detalle'>${item.nombre}</p>
-            <p class='subtotal-libro carrito-detalle'>$${item.precio * item.cantidad}</p> <!-- Subtotal -->
+            <p class='subtotal-libro carrito-detalle'>$${(item.precio * item.cantidad).toFixed(2)}</p>
 
             <div class='item-carrito-controls'>
                 <button class="btn btn-sm coloresi" onclick="disminuirCantidad(${index})"><i class="fas fa-minus"></i></button>
                 <input class='cantidad-libro input' type="number" min="1" value="${item.cantidad}" onchange="modificarCantidad(${index}, this.value)">
                 <button class="btn btn-sm coloresi" onclick="aumentarCantidad(${index})"><i class="fas fa-plus"></i></button>
                 <button class="btn btn-danger btn-sm eliminar" onclick="eliminarDelCarrito(${index})"><i class="fas fa-trash-alt"></i></button>
-
             </div>
         </div>
     </div>`;
     });
 
-    let total = subtotal;
-    document.getElementById("subtotal-total").innerHTML = `
-                                                        <p>TOTAL: $${total.toFixed(2)}</p>`;
-}
 
+    let total = subtotal;
+    document.getElementById("subtotal-total").innerHTML = `Total: $${total.toFixed(2)}`;
+}
 
 document.getElementById("carrito-nav").addEventListener("click", function () {
     let resumenCompra = document.getElementById("resumen-compra");
@@ -198,13 +180,20 @@ function ocultarResumenCompra() {
     let resumenCompra = document.getElementById("resumen-compra");
     resumenCompra.style.display = "none";
 }
+
 carritoNav.addEventListener("click", () => {
     carritoSidebar.classList.add("open"); // Agrega la clase "open" al hacer clic en el enlace del carrito
 });
+
 // FINALIZAR COMPRA
 const botonFinalizar = document.querySelector('.finalizar');
 
-botonFinalizar.addEventListener('click', function() {
-window.location.href = 'finalizar.html';
+botonFinalizar.addEventListener('click', function () {
+    window.location.href = 'finalizar.html';
 });
 
+function actualizarCantidadCarrito() {
+    let cantidadCarrito = 0;
+    carrito.forEach(item => cantidadCarrito += item.cantidad);
+    document.getElementById("cantidad-carrito").textContent = cantidadCarrito;
+}
