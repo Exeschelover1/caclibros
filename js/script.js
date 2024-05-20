@@ -12,6 +12,14 @@ function agregarAlCarrito(button) {
     }
     mostrarCarrito();
     actualizarCantidadCarrito();
+       // Mostrar la alerta
+       var alerta = document.getElementById("alerta");
+       alerta.style.display = "block";
+   
+       // Opcionalmente, puedes ocultar la alerta después de unos segundos
+       setTimeout(function() {
+           alerta.style.display = "none";
+       }, 3000); // Oculta la alerta después de 3 segundos (3000 milisegundos)
 }
 
 /* DOM DINAMICO NAV */
@@ -107,6 +115,7 @@ function eliminarDelCarrito(index) {
         // Por ejemplo, eliminando el elemento del array de items
         carrito.splice(index, 1);
         actualizarCarrito();
+        
     });
 }
 
@@ -197,3 +206,7 @@ function actualizarCantidadCarrito() {
     carrito.forEach(item => cantidadCarrito += item.cantidad);
     document.getElementById("cantidad-carrito").textContent = cantidadCarrito;
 }
+
+
+/*ALERTA*/
+
