@@ -15,6 +15,7 @@ function agregarAlCarrito(button) {
        // Mostrar la alerta
        var alerta = document.getElementById("alerta");
        alerta.style.display = "block";
+       
    
        // Opcionalmente, puedes ocultar la alerta después de unos segundos
        setTimeout(function() {
@@ -30,6 +31,7 @@ document.addEventListener('scroll', function () {
     if (window.scrollY > 0) {
         header.classList.add('sticky-header');
         navbar.style.backgroundColor = 'var(--color-secundario)';
+
     } else {
         header.classList.remove('sticky-header');
         navbar.style.backgroundColor = 'var(--color-principal)';
@@ -207,6 +209,71 @@ function actualizarCantidadCarrito() {
     document.getElementById("cantidad-carrito").textContent = cantidadCarrito;
 }
 
+async function fetchBooks() {
+    const queries = [
+        'python', 'programming', 'data science', 'web development',
+        'machine learning', 'fiction', 'non-fiction',
+        'fantasy', 'history', 'biography', 'mystery', 'romance', 'thriller'
+    ];
 
-/*ALERTA*/
+    // Seleccionar aleatoriamente una consulta del array queries
+    const randomIndex = Math.floor(Math.random() * queries.length);
+    const query = queries[randomIndex];
+    
+    const apiUrl = `https://www.googleapis.com/books/v1/volumes?q=${query}`;
 
+    try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        displayBooks(data.items);
+    } catch (error) {
+        console.error('Error al obtener los libros:', error);
+    }
+}
+
+
+function displayBooks(books) {
+const booksContainer = document.getElementById('books-container');
+booksContainer.innerHTML = '';
+
+// Limitar el número de libros a mostrar a 6
+const maxBooksToShow = 6;
+const booksToShow = books.filter(book => {
+// Verifica si el precio está definido y es mayor que cero
+return book.saleInfo && book.saleInfo.listPrice && book.saleInfo.listPrice.amount > 0;
+}).slice(0, maxBooksToShow);
+
+booksToShow.forEach(book => {
+const bookInfo = book.volumeInfo;
+const bookElement = document.createElement('div');
+bookElement.classList.add('book');
+
+const bookImage = bookInfo.imageLinks ? bookInfo.imageLinks.thumbnail : './Imagenes/default-book.png';
+const bookTitle = bookInfo.title;
+const bookAuthor = bookInfo.authors ? bookInfo.authors.join(', ') : 'Autor desconocido';
+const bookPrice = book.saleInfo.listPrice ? `$${book.saleInfo.listPrice.amount}` : 'Precio no disponible';
+
+bookElement.innerHTML = `
+    <div class="libro">
+        <img src="${bookImage}" alt="Portada del libro">
+        <h3 class="titulo-libro">${bookTitle}</h3>
+        <p>${bookAuthor}</p>
+        <p class="precio">${bookPrice}</p>
+        <button class="button" onclick="agregarAlCarrito(this)"><i class="fas fa-shopping-cart"></i></button>
+    </div>
+`;
+
+booksContainer.appendChild(bookElement);
+});
+}
+
+fetchBooks();
+
+document.addEventListener('DOMContentLoaded', function () {
+    const nav = document.getElementById("nav");
+    const abrir = document.getElementById("abrir");
+
+    abrir.addEventListener("click", () => {
+        nav.classList.toggle("show");
+    });
+});
